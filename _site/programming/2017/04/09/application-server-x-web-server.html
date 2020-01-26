@@ -89,6 +89,10 @@
         
           
         
+          
+        
+          
+        
       </div>
     </nav>
 
@@ -125,7 +129,7 @@
 
 <p>Algumas funções interessantes que web servers podem desempenhar:</p>
 
-<h3 id="servir-vrios-sites">Servir vários sites</h3>
+<h3 id="servir-vários-sites">Servir vários sites</h3>
 
 <p>Uma configuração comum em web servers, é ele mesmo responder a vários sites ou aplicações, assim, quando requisição chega pelo mesmo IP mas com host diferente, o web server sabe para quem redirecionar.</p>
 
@@ -135,7 +139,7 @@
 
 <p>Ele consegue fazer isso usando cache e compactação o que dá uma resposta muito mais rápida e menor tempo de transmissão. Se estamos falando de HTTP 2 (nova versão do protocolo HTTP, ainda em implementação), temos várias otimizações como resposta de várias requisições em um request e envio de dados binários. Tudo para otimizar o recurso de rede.</p>
 
-<h3 id="funes-de-firewall">Funções de Firewall</h3>
+<h3 id="funções-de-firewall">Funções de Firewall</h3>
 
 <p>Um site pode ser um acesso alto repentino ou por um sucesso momentâneo ou mesmo por um ataque massivo por robôs programados por hacker.  Para se proteger, o web server pode ter configurações de firewall para se proteger e recusar conexões, evitando uma sobrecarga no uso dos recursos computacionais.</p>
 
@@ -170,12 +174,12 @@
 <p>JSON pode ter o seguinte formato:</p>
 
 <figure class="highlight"><pre><code class="language-json" data-lang="json"><span class="p">{</span><span class="w">
-  </span><span class="err">“nome”:</span><span class="w"> </span><span class="err">“Celso</span><span class="w"> </span><span class="err">Crivelaro”,</span><span class="w">
-  </span><span class="err">“site”:</span><span class="w"> </span><span class="err">“http://crivelaro.me”,</span><span class="w">
-   </span><span class="err">data_ultima_publicacao:</span><span class="w"> </span><span class="err">“2017-04-08”</span><span class="w">
+  </span><span class="err">“nome”:</span><span class="w"> </span><span class="err">“Celso</span><span class="w"> </span><span class="err">Crivelaro”</span><span class="p">,</span><span class="w">
+  </span><span class="err">“site”:</span><span class="w"> </span><span class="err">“http://crivelaro.me”</span><span class="p">,</span><span class="w">
+   </span><span class="err">data_ultima_publicacao:</span><span class="w"> </span><span class="err">“</span><span class="mi">2017-04-08</span><span class="err">”</span><span class="w">
 </span><span class="p">}</span></code></pre></figure>
 
-<h2 id="boa-prtica-web-server-na-frente-de-application-server">Boa Prática: Web Server na frente de Application Server</h2>
+<h2 id="boa-prática-web-server-na-frente-de-application-server">Boa Prática: Web Server na frente de Application Server</h2>
 
 <p>Por que devemos fazer isso? Se o Application Server sabe fazer boa parte do trabalho, por que preciso de um web server?</p>
 

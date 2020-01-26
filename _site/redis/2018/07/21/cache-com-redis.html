@@ -88,6 +88,10 @@
         
           
         
+          
+        
+          
+        
       </div>
     </nav>
 
@@ -152,71 +156,71 @@
   </li>
 </ul>
 
-<h2 id="criando-um-par-cachevel-usando-redis">Criando um par cacheável usando Redis</h2>
+<h2 id="criando-um-par-cacheável-usando-redis">Criando um par cacheável usando Redis</h2>
 
 <p>Qualquer estrutura de dados criada do Redis serve como cache, já que será armazenada na memória. Assim, um simples comando SET armazena e um GET irá retorná-lo:</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">192.168.99.101:32768&gt; </span>SET cached_data 123
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">192.168.99.101:32768&gt; SET cached_data 123
 OK
-<span class="gp">192.168.99.101:32768&gt; </span>GET cached_data
+192.168.99.101:32768&gt; GET cached_data
 <span class="s2">"123"</span></code></pre></figure>
 
 <p>Como fazer o dado ser expirável? Usando um SETEX</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">192.168.99.101:32768&gt; </span>SETEX cached_data 10 123
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">192.168.99.101:32768&gt; SETEX cached_data 10 123
 OK
-<span class="gp">192.168.99.101:32768&gt; </span>TTL cached_data
+192.168.99.101:32768&gt; TTL cached_data
 <span class="o">(</span>integer<span class="o">)</span> 9</code></pre></figure>
 
 <p>Neste comando o valor ‘10’ é o tempo em segundos em que este dado estará disponível, logo depois de 10s o GET retorna nulo:</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">192.168.99.101:32768&gt; </span>SETEX cached_data 10 123
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">192.168.99.101:32768&gt; SETEX cached_data 10 123
 OK
-<span class="gp">192.168.99.101:32768&gt; </span>GET cached_data
+192.168.99.101:32768&gt; GET cached_data
 <span class="s2">"123"</span>
-<span class="gp">192.168.99.101:32768&gt; </span>GET cached_data
+192.168.99.101:32768&gt; GET cached_data
 <span class="o">(</span>nil<span class="o">)</span></code></pre></figure>
 
 <p>Porém, se queremos usar outras estruturas de dados do Redis, o comando que deixa os dados invalidados será o EXPIRE. No exemplo abaixo, crio uma lista com 4 elementos e depois de expirada em 5s, a lista retorna tamanho vazio:</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">192.168.99.101:32768&gt; </span>LPUSH cached_list 1 2 3 4
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">192.168.99.101:32768&gt; LPUSH cached_list 1 2 3 4
 <span class="o">(</span>integer<span class="o">)</span> 4
-<span class="gp">192.168.99.101:32768&gt; </span>LLEN cached_list
+192.168.99.101:32768&gt; LLEN cached_list
 <span class="o">(</span>integer<span class="o">)</span> 4
-<span class="gp">192.168.99.101:32768&gt; </span>EXPIRE cached_list 5
+192.168.99.101:32768&gt; EXPIRE cached_list 5
 <span class="o">(</span>integer<span class="o">)</span> 1
-<span class="gp">192.168.99.101:32768&gt; </span>LLEN cached_list
+192.168.99.101:32768&gt; LLEN cached_list
 <span class="o">(</span>integer<span class="o">)</span> 0</code></pre></figure>
 
 <p>Recomenda-se o uso do MULTI para inserir os dados e setar o cache de forma atômica.</p>
 
 <p>O ponto fraco de usar outras estruturas de dados está em que o cache é cancelado quando a estrutura é alterada. Podemos checar quanto tempo de vida a estrutura de dados tem com o comando TTL que retorna os segundos restantes:</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">192.168.99.101:32768&gt; </span>LPUSH cached_list 1 2 3 4
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">192.168.99.101:32768&gt; LPUSH cached_list 1 2 3 4
 <span class="o">(</span>integer<span class="o">)</span> 4
-<span class="gp">192.168.99.101:32768&gt; </span>EXPIRE cached_list 10
+192.168.99.101:32768&gt; EXPIRE cached_list 10
 <span class="o">(</span>integer<span class="o">)</span> 1
-<span class="gp">192.168.99.101:32768&gt; </span>LPUSH cached_list 5
+192.168.99.101:32768&gt; LPUSH cached_list 5
 <span class="o">(</span>integer<span class="o">)</span> 5
-<span class="gp">192.168.99.101:32768&gt; </span>TTL cached_list
+192.168.99.101:32768&gt; TTL cached_list
 <span class="o">(</span>integer<span class="o">)</span> 0</code></pre></figure>
 
 <h2 id="expirando-chaves-de-forma-manual">Expirando chaves de forma manual</h2>
 
 <p>Outra propriedade importante é invalidar o cache de forma manual. A sua aplicação pode necessitar fazer isso se a fonte original foi modificada ou se o cache pode conter uma inconsistência importante. Para isso podemos usar o comando UNLINK:</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">192.168.99.101:32768&gt; </span>SETEX cached_data 10 123
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash">192.168.99.101:32768&gt; SETEX cached_data 10 123
 OK
-<span class="gp">192.168.99.101:32768&gt; </span>UNLINK cached_data
+192.168.99.101:32768&gt; UNLINK cached_data
 <span class="o">(</span>integer<span class="o">)</span> 1
-<span class="gp">192.168.99.101:32768&gt; </span>TTL cached_data
-<span class="o">(</span>integer<span class="o">)</span> -2
-<span class="gp">192.168.99.101:32768&gt; </span>GET cached_data
+192.168.99.101:32768&gt; TTL cached_data
+<span class="o">(</span>integer<span class="o">)</span> <span class="nt">-2</span>
+192.168.99.101:32768&gt; GET cached_data
 <span class="o">(</span>nil<span class="o">)</span></code></pre></figure>
 
 <p>Este comando é similar ao DEL, porém, o UNLINK é feito em outra thread, ou seja, não fica bloqueado esperando a execução do comando.</p>
 
-<h2 id="referncias">Referências</h2>
+<h2 id="referências">Referências</h2>
 <ul>
   <li><a href="https://redis.io/commands/setex">SETEX</a></li>
   <li><a href="https://redis.io/commands/expire">EXPIRE</a></li>

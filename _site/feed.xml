@@ -6,9 +6,9 @@
 </description>
     <link>http://crivelaro.me/</link>
     <atom:link href="http://crivelaro.me/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sun, 26 Jan 2020 19:33:13 -0300</pubDate>
-    <lastBuildDate>Sun, 26 Jan 2020 19:33:13 -0300</lastBuildDate>
-    <generator>Jekyll v3.0.1</generator>
+    <pubDate>Sun, 26 Jan 2020 19:43:24 -0300</pubDate>
+    <lastBuildDate>Sun, 26 Jan 2020 19:43:24 -0300</lastBuildDate>
+    <generator>Jekyll v3.8.5</generator>
     
       <item>
         <title>Cache com Redis</title>
@@ -58,71 +58,71 @@
   &lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&quot;criando-um-par-cachevel-usando-redis&quot;&gt;Criando um par cacheável usando Redis&lt;/h2&gt;
+&lt;h2 id=&quot;criando-um-par-cacheável-usando-redis&quot;&gt;Criando um par cacheável usando Redis&lt;/h2&gt;
 
 &lt;p&gt;Qualquer estrutura de dados criada do Redis serve como cache, já que será armazenada na memória. Assim, um simples comando SET armazena e um GET irá retorná-lo:&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;SET cached_data 123
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;192.168.99.101:32768&amp;gt; SET cached_data 123
 OK
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;GET cached_data
+192.168.99.101:32768&amp;gt; GET cached_data
 &lt;span class=&quot;s2&quot;&gt;&quot;123&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Como fazer o dado ser expirável? Usando um SETEX&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;SETEX cached_data 10 123
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;192.168.99.101:32768&amp;gt; SETEX cached_data 10 123
 OK
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;TTL cached_data
+192.168.99.101:32768&amp;gt; TTL cached_data
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 9&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Neste comando o valor ‘10’ é o tempo em segundos em que este dado estará disponível, logo depois de 10s o GET retorna nulo:&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;SETEX cached_data 10 123
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;192.168.99.101:32768&amp;gt; SETEX cached_data 10 123
 OK
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;GET cached_data
+192.168.99.101:32768&amp;gt; GET cached_data
 &lt;span class=&quot;s2&quot;&gt;&quot;123&quot;&lt;/span&gt;
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;GET cached_data
+192.168.99.101:32768&amp;gt; GET cached_data
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;nil&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Porém, se queremos usar outras estruturas de dados do Redis, o comando que deixa os dados invalidados será o EXPIRE. No exemplo abaixo, crio uma lista com 4 elementos e depois de expirada em 5s, a lista retorna tamanho vazio:&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;LPUSH cached_list 1 2 3 4
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;192.168.99.101:32768&amp;gt; LPUSH cached_list 1 2 3 4
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 4
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;LLEN cached_list
+192.168.99.101:32768&amp;gt; LLEN cached_list
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 4
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;EXPIRE cached_list 5
+192.168.99.101:32768&amp;gt; EXPIRE cached_list 5
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;LLEN cached_list
+192.168.99.101:32768&amp;gt; LLEN cached_list
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 0&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Recomenda-se o uso do MULTI para inserir os dados e setar o cache de forma atômica.&lt;/p&gt;
 
 &lt;p&gt;O ponto fraco de usar outras estruturas de dados está em que o cache é cancelado quando a estrutura é alterada. Podemos checar quanto tempo de vida a estrutura de dados tem com o comando TTL que retorna os segundos restantes:&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;LPUSH cached_list 1 2 3 4
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;192.168.99.101:32768&amp;gt; LPUSH cached_list 1 2 3 4
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 4
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;EXPIRE cached_list 10
+192.168.99.101:32768&amp;gt; EXPIRE cached_list 10
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;LPUSH cached_list 5
+192.168.99.101:32768&amp;gt; LPUSH cached_list 5
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 5
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;TTL cached_list
+192.168.99.101:32768&amp;gt; TTL cached_list
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 0&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;h2 id=&quot;expirando-chaves-de-forma-manual&quot;&gt;Expirando chaves de forma manual&lt;/h2&gt;
 
 &lt;p&gt;Outra propriedade importante é invalidar o cache de forma manual. A sua aplicação pode necessitar fazer isso se a fonte original foi modificada ou se o cache pode conter uma inconsistência importante. Para isso podemos usar o comando UNLINK:&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;SETEX cached_data 10 123
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;192.168.99.101:32768&amp;gt; SETEX cached_data 10 123
 OK
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;UNLINK cached_data
+192.168.99.101:32768&amp;gt; UNLINK cached_data
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;TTL cached_data
-&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; -2
-&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;GET cached_data
+192.168.99.101:32768&amp;gt; TTL cached_data
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-2&lt;/span&gt;
+192.168.99.101:32768&amp;gt; GET cached_data
 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;nil&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Este comando é similar ao DEL, porém, o UNLINK é feito em outra thread, ou seja, não fica bloqueado esperando a execução do comando.&lt;/p&gt;
 
-&lt;h2 id=&quot;referncias&quot;&gt;Referências&lt;/h2&gt;
+&lt;h2 id=&quot;referências&quot;&gt;Referências&lt;/h2&gt;
 &lt;ul&gt;
   &lt;li&gt;&lt;a href=&quot;https://redis.io/commands/setex&quot;&gt;SETEX&lt;/a&gt;&lt;/li&gt;
   &lt;li&gt;&lt;a href=&quot;https://redis.io/commands/expire&quot;&gt;EXPIRE&lt;/a&gt;&lt;/li&gt;
@@ -311,7 +311,7 @@ OK
   &lt;li&gt;Considerar o tempo de fazer teste automatizado.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&quot;tarefa--s-considerada-pronta-se-o-teste-foi-feito&quot;&gt;Tarefa é só considerada pronta se o teste foi feito&lt;/h2&gt;
+&lt;h2 id=&quot;tarefa-é-só-considerada-pronta-se-o-teste-foi-feito&quot;&gt;Tarefa é só considerada pronta se o teste foi feito&lt;/h2&gt;
 
 &lt;p&gt;Já ouvi muitas vezes: “Está pronto, só falta testar”. Ou seja, não se tem ideia nenhuma se o código funciona, quase um problema de “Gato de Schrödinger”. Na minha opinião o trabalho ainda está na metade.&lt;/p&gt;
 
@@ -328,7 +328,7 @@ OK
   &lt;li&gt;Testes manuais executados pelo desenvolvedor.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&quot;teste-tambm--cdigo-e-precisa-de-uma-boa-arquitetura&quot;&gt;Teste também é código e precisa de uma boa arquitetura&lt;/h2&gt;
+&lt;h2 id=&quot;teste-também-é-código-e-precisa-de-uma-boa-arquitetura&quot;&gt;Teste também é código e precisa de uma boa arquitetura&lt;/h2&gt;
 
 &lt;p&gt;Já vi em muitos casos o código principal ter uma preocupação grande com arquitetura, estilo e boas práticas e por outro lado, o código do teste ser mal feito, difícil de entender e difícil de modificar.&lt;/p&gt;
 
@@ -343,7 +343,7 @@ OK
   &lt;li&gt;Código de teste tem bons padrões do framework e estruturais.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h2 id=&quot;e-quando-assumir-o-risco-de-no-testar&quot;&gt;E quando assumir o risco de não testar?&lt;/h2&gt;
+&lt;h2 id=&quot;e-quando-assumir-o-risco-de-não-testar&quot;&gt;E quando assumir o risco de não testar?&lt;/h2&gt;
 
 &lt;p&gt;O custo de fazer teste ser muito caro é um fator importante a se considerar. Se a ordem de grandeza de um teste é 10 vezes a da funcionalidade, é de se questionar se a automatização vale pena. Isso é bem comum para testes complexos como Teste de Carga que precisa de uma grande infraestrutura e planejamento. Alternativas é sempre o teste manual ou verificação de comportamento em produção mesmo.&lt;/p&gt;
 
@@ -431,7 +431,7 @@ OK
 
 &lt;p&gt;Algumas funções interessantes que web servers podem desempenhar:&lt;/p&gt;
 
-&lt;h3 id=&quot;servir-vrios-sites&quot;&gt;Servir vários sites&lt;/h3&gt;
+&lt;h3 id=&quot;servir-vários-sites&quot;&gt;Servir vários sites&lt;/h3&gt;
 
 &lt;p&gt;Uma configuração comum em web servers, é ele mesmo responder a vários sites ou aplicações, assim, quando requisição chega pelo mesmo IP mas com host diferente, o web server sabe para quem redirecionar.&lt;/p&gt;
 
@@ -441,7 +441,7 @@ OK
 
 &lt;p&gt;Ele consegue fazer isso usando cache e compactação o que dá uma resposta muito mais rápida e menor tempo de transmissão. Se estamos falando de HTTP 2 (nova versão do protocolo HTTP, ainda em implementação), temos várias otimizações como resposta de várias requisições em um request e envio de dados binários. Tudo para otimizar o recurso de rede.&lt;/p&gt;
 
-&lt;h3 id=&quot;funes-de-firewall&quot;&gt;Funções de Firewall&lt;/h3&gt;
+&lt;h3 id=&quot;funções-de-firewall&quot;&gt;Funções de Firewall&lt;/h3&gt;
 
 &lt;p&gt;Um site pode ser um acesso alto repentino ou por um sucesso momentâneo ou mesmo por um ataque massivo por robôs programados por hacker.  Para se proteger, o web server pode ter configurações de firewall para se proteger e recusar conexões, evitando uma sobrecarga no uso dos recursos computacionais.&lt;/p&gt;
 
@@ -476,12 +476,12 @@ OK
 &lt;p&gt;JSON pode ter o seguinte formato:&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-json&quot; data-lang=&quot;json&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“nome”:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“Celso&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;Crivelaro”,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-  &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“site”:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“http://crivelaro.me”,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
-   &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;data_ultima_publicacao:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“2017-04-08”&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“nome”:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“Celso&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;Crivelaro”&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“site”:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“http://crivelaro.me”&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+   &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;data_ultima_publicacao:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2017-04-08&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;”&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
 &lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;h2 id=&quot;boa-prtica-web-server-na-frente-de-application-server&quot;&gt;Boa Prática: Web Server na frente de Application Server&lt;/h2&gt;
+&lt;h2 id=&quot;boa-prática-web-server-na-frente-de-application-server&quot;&gt;Boa Prática: Web Server na frente de Application Server&lt;/h2&gt;
 
 &lt;p&gt;Por que devemos fazer isso? Se o Application Server sabe fazer boa parte do trabalho, por que preciso de um web server?&lt;/p&gt;
 
@@ -564,15 +564,15 @@ OK
 
 &lt;p&gt;O ideal é reduzir este tempo que pode demorar até 3 meses para o mínimo possível. Como podemos fazer?&lt;/p&gt;
 
-&lt;h2 id=&quot;para-quem-no--este-post-e-o-que-no--este-post&quot;&gt;Para quem não é este post e o que não é este post&lt;/h2&gt;
+&lt;h2 id=&quot;para-quem-não-é-este-post-e-o-que-não-é-este-post&quot;&gt;Para quem não é este post e o que não é este post&lt;/h2&gt;
 
 &lt;p&gt;Este é um post para devs e seus coordenadores e não para gerentões ou profissionais de RH. Minha intenção aqui é dar dicas de preparação aos devs e ao time para a chegada de um novo par. Este post não é sobre como empresas devem contratar ou selecionar o seu desenvolvedor.&lt;/p&gt;
 
 &lt;p&gt;No lado pessoal, este post não é um dedo na cara dos lugares onde passei, apesar de ter visto esta situação por onde passei. O que quero dividir as experiências que deram certo e as experiências ruins que passei e vi com pares.&lt;/p&gt;
 
-&lt;h2 id=&quot;antes-da-chegada-do-novo-funcionrio&quot;&gt;Antes da chegada do novo funcionário&lt;/h2&gt;
+&lt;h2 id=&quot;antes-da-chegada-do-novo-funcionário&quot;&gt;Antes da chegada do novo funcionário&lt;/h2&gt;
 
-&lt;h3 id=&quot;d-um-computador-deste-o-primeiro-dia&quot;&gt;Dê um computador deste o primeiro dia&lt;/h3&gt;
+&lt;h3 id=&quot;dê-um-computador-deste-o-primeiro-dia&quot;&gt;Dê um computador deste o primeiro dia&lt;/h3&gt;
 
 &lt;p&gt;Acho que quase em todas as empresas que passei o primeiro dia não tive um computador. Isso porque:&lt;/p&gt;
 
@@ -597,7 +597,7 @@ OK
 
 &lt;h2 id=&quot;primeira-semana&quot;&gt;Primeira semana&lt;/h2&gt;
 
-&lt;h3 id=&quot;explique-o-que-a-empresa-faz-e-a-importncia-do-projeto&quot;&gt;Explique o que a empresa faz e a importância do projeto&lt;/h3&gt;
+&lt;h3 id=&quot;explique-o-que-a-empresa-faz-e-a-importância-do-projeto&quot;&gt;Explique o que a empresa faz e a importância do projeto&lt;/h3&gt;
 
 &lt;p&gt;Esta é uma atividade mais interessante para os coordenadores que têm visão macro. Já vi muito dev entrando em projeto que nem sabe para que serve dentro do propósito da empresa ou mesmo sabe pouco das regras de negócio.&lt;/p&gt;
 
@@ -613,7 +613,7 @@ OK
 
 &lt;p&gt;Esse dev experiente não deve estar comprometido com as entregas naquele momento para que não fique preocupado com outros fatores além de ambientar o novo dev.&lt;/p&gt;
 
-&lt;h3 id=&quot;fazer-deploy-de-aplicao-no-primeiro-dia&quot;&gt;Fazer deploy de aplicação NO PRIMEIRO DIA&lt;/h3&gt;
+&lt;h3 id=&quot;fazer-deploy-de-aplicação-no-primeiro-dia&quot;&gt;Fazer deploy de aplicação NO PRIMEIRO DIA&lt;/h3&gt;
 
 &lt;p&gt;Ao contratar um dev, o seu objetivo é entregar mais software, não apenas fazer. Ou seja, software vale mesmo quando está em produção.&lt;/p&gt;
 
@@ -631,7 +631,7 @@ OK
 
 &lt;p&gt;Pode parece bobagem, mas kit boas-vindas tem sex appeal, o novo empregado vai compartilhar nas redes sociais e a sua empresa se torna atrativa.&lt;/p&gt;
 
-&lt;h2 id=&quot;processos-e-documentao&quot;&gt;Processos e Documentação&lt;/h2&gt;
+&lt;h2 id=&quot;processos-e-documentação&quot;&gt;Processos e Documentação&lt;/h2&gt;
 
 &lt;p&gt;Aqui também entra em atividades antes da contração, mas que ajuda o time todo em geral na troca de informações sobre o projeto.&lt;/p&gt;
 
@@ -647,7 +647,7 @@ OK
   &lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;h3 id=&quot;automatizao-de-ambiente-de-dev&quot;&gt;Automatização de ambiente de dev&lt;/h3&gt;
+&lt;h3 id=&quot;automatização-de-ambiente-de-dev&quot;&gt;Automatização de ambiente de dev&lt;/h3&gt;
 
 &lt;p&gt;Outra decisão muito interessante é automatizar a instalação do ambiente de desenvolvimento. Assim, todos os devs mantém um mesmo ambiente padronizado e é só rodar um script para se ter tudo funcionando.&lt;/p&gt;
 
@@ -689,19 +689,19 @@ OK
 
 &lt;p&gt;No Mac, a sua instalação é simples:&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;brew install direnv &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;brew &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;direnv &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;O mesmo no Ubuntu/Debian:&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;sudo apt-get install direnv &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;direnv &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Depois disto, precisa adicionar a inicialização na configuração do Bash. Se usa Bash tradicional, só adicionar no ~/.bashrc&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;direnv hook bash&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;direnv hook bash&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Para outros bashes como Zsh, Fish, veja a documentação: &lt;a href=&quot;http://direnv.net/&quot;&gt;http://direnv.net/&lt;/a&gt;&lt;/p&gt;
 
-&lt;h2 id=&quot;variveis-de-ambiente&quot;&gt;Variáveis de Ambiente&lt;/h2&gt;
+&lt;h2 id=&quot;variáveis-de-ambiente&quot;&gt;Variáveis de Ambiente&lt;/h2&gt;
 
 &lt;p&gt;Basta criar um arquivo .envrc no diretório em que está o projeto com o conteúdo:&lt;/p&gt;
 
@@ -719,12 +719,12 @@ direnv: unloading&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Assim, a variável de ambiente só fica disponível quando entro no diretório e dessa maneira posso usar a mesma variável para cada tipo de projeto o que é uma prática comum quando se usa projetos parecidos.&lt;/p&gt;
 
-&lt;h2 id=&quot;adicionando-diretrios-ao-path&quot;&gt;Adicionando diretórios ao PATH&lt;/h2&gt;
+&lt;h2 id=&quot;adicionando-diretórios-ao-path&quot;&gt;Adicionando diretórios ao PATH&lt;/h2&gt;
 
 &lt;p&gt;Essa é a funcionalidade que mais gosto do Direnv. Quando monto alguns projetos com um diretório &lt;strong&gt;bin&lt;/strong&gt; com alguns shell scripts, acho terrível ter que digitar algo como:&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;./meu_script
-&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;bin/meu_script&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./meu_script
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;bin/meu_script&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;No Linux ou Mac, um binário é chamado de acordo com os diretórios mapeados na variável de ambiente $PATH. O direnv pode configurar o PATH para que se tenha a configuração apenas para aquele projeto.&lt;/p&gt;
 

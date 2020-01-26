@@ -89,6 +89,10 @@
         
           
         
+          
+        
+          
+        
       </div>
     </nav>
 
@@ -115,19 +119,19 @@
 
 <p>No Mac, a sua instalação é simples:</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>brew install direnv </code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span>brew <span class="nb">install </span>direnv </code></pre></figure>
 
 <p>O mesmo no Ubuntu/Debian:</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>sudo apt-get install direnv </code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span><span class="nb">sudo </span>apt-get <span class="nb">install </span>direnv </code></pre></figure>
 
 <p>Depois disto, precisa adicionar a inicialização na configuração do Bash. Se usa Bash tradicional, só adicionar no ~/.bashrc</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span><span class="nb">eval</span> <span class="s2">"</span><span class="k">$(</span>direnv hook bash<span class="k">)</span><span class="s2">"</span></code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span><span class="nb">eval</span> <span class="s2">"</span><span class="si">$(</span>direnv hook bash<span class="si">)</span><span class="s2">"</span></code></pre></figure>
 
 <p>Para outros bashes como Zsh, Fish, veja a documentação: <a href="http://direnv.net/">http://direnv.net/</a></p>
 
-<h2 id="variveis-de-ambiente">Variáveis de Ambiente</h2>
+<h2 id="variáveis-de-ambiente">Variáveis de Ambiente</h2>
 
 <p>Basta criar um arquivo .envrc no diretório em que está o projeto com o conteúdo:</p>
 
@@ -145,12 +149,12 @@ direnv: unloading</code></pre></figure>
 
 <p>Assim, a variável de ambiente só fica disponível quando entro no diretório e dessa maneira posso usar a mesma variável para cada tipo de projeto o que é uma prática comum quando se usa projetos parecidos.</p>
 
-<h2 id="adicionando-diretrios-ao-path">Adicionando diretórios ao PATH</h2>
+<h2 id="adicionando-diretórios-ao-path">Adicionando diretórios ao PATH</h2>
 
 <p>Essa é a funcionalidade que mais gosto do Direnv. Quando monto alguns projetos com um diretório <strong>bin</strong> com alguns shell scripts, acho terrível ter que digitar algo como:</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="gp">$ </span>./meu_script
-<span class="gp">$ </span>bin/meu_script</code></pre></figure>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nv">$ </span>./meu_script
+<span class="nv">$ </span>bin/meu_script</code></pre></figure>
 
 <p>No Linux ou Mac, um binário é chamado de acordo com os diretórios mapeados na variável de ambiente $PATH. O direnv pode configurar o PATH para que se tenha a configuração apenas para aquele projeto.</p>
 

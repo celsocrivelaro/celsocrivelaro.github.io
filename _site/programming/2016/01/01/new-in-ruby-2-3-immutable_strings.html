@@ -89,6 +89,10 @@
         
           
         
+          
+        
+          
+        
       </div>
     </nav>
 
@@ -113,7 +117,7 @@
 
 <h1 id="immutable-strings-pragma">Immutable Strings Pragma</h1>
 
-<p>By default, Ruby has mutable String objects and <code class="highlighter-rouge">.freeze</code> method transforms in an immutable String. Latter I’ll explain why immutable Strings are important to your Ruby code.</p>
+<p>By default, Ruby has mutable String objects and <code class="language-plaintext highlighter-rouge">.freeze</code> method transforms in an immutable String. Latter I’ll explain why immutable Strings are important to your Ruby code.</p>
 
 <p>How it is hard to do for each String, the magic comment transforms all Strings to immutable in the file.</p>
 
@@ -124,7 +128,7 @@
 
 <p>Another way to have it for all your application is running on script call:</p>
 
-<figure class="highlight"><pre><code class="language-bash" data-lang="bash"> <span class="nv">$ </span>ruby --enable-frozen-string-literal -e <span class="s2">"puts 'a'.frozen?"</span>
+<figure class="highlight"><pre><code class="language-bash" data-lang="bash"> <span class="nv">$ </span>ruby <span class="nt">--enable-frozen-string-literal</span> <span class="nt">-e</span> <span class="s2">"puts 'a'.frozen?"</span>
 <span class="nb">true</span></code></pre></figure>
 
 <p>You probaly are wondering why to use immutable structures. Let’s face the consequences of mutable and immutable structures:</p>
