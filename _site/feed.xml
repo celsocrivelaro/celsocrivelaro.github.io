@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Celso Crivelaro</title>
+    <description>Sharing a little bit of my experience and ideas.
+</description>
+    <link>http://crivelaro.me/</link>
+    <atom:link href="http://crivelaro.me/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Sun, 26 Jan 2020 19:33:13 -0300</pubDate>
+    <lastBuildDate>Sun, 26 Jan 2020 19:33:13 -0300</lastBuildDate>
+    <generator>Jekyll v3.0.1</generator>
+    
+      <item>
+        <title>Cache com Redis</title>
+        <description>&lt;p&gt;Sendo um banco de dados especializado em memória, o Redis fornece um conjunto de comandos que suportam caching de dados. Neste post mostro a importância de ser ter um cache e alguns pontos a se considerar para montar o cache de dados e como podemos fazer isso usando Redis.&lt;/p&gt;
+
+&lt;p&gt;A vantagme de se usar banco em memória está em ser agnóstico à aplicação, ou seja, posso usar uma app em Python, Ruby, C, Elixir, ou mesmo um conjunto de aplicações e não precisar reinventar a roda.&lt;/p&gt;
+
+&lt;h2 id=&quot;para-que-se-usar-cache&quot;&gt;Para que se usar cache?&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Dados caros de se produzir&lt;/strong&gt;: Dados complexos oriundos processamento intenso, cálculos ou modelos de inteligência artificial;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Dados caros para se buscar&lt;/strong&gt;: Dados buscados de APIs externas, cruzamentos de dados de fontes distintas ou fontes de dados lentas.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Quando uma memória é mais veloz do que a outra&lt;/strong&gt;: No caso como o Redis fornece estrutura de dados em memória, tende a ser mais veloz salva e buscar do que na rede ou de diversos JOINs do banco de dados;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Aliviar a carga sobre um recurso&lt;/strong&gt;: Quando uma API ou mesmo o banco de dados é bombardeado de buscas repetidas, uma boa prática é usar um cache para evitar sobrecarga nos sistemas principais, o que aumenta a disponibilidade da plataforma.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;casos-de-uso-para-cache&quot;&gt;Casos de uso para cache&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Dados de Sessão&lt;/li&gt;
+  &lt;li&gt;Últimas páginas visitadas&lt;/li&gt;
+  &lt;li&gt;Dados de uma busca de APIs&lt;/li&gt;
+  &lt;li&gt;Assets como JS e CSS&lt;/li&gt;
+  &lt;li&gt;Imagens e Vídeos&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;o-que-precisamos-considerar-para-um-cache&quot;&gt;O que precisamos considerar para um cache?&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Dado precisa ser buscável
+    &lt;ul&gt;
+      &lt;li&gt;Graceful degradation: Não pode explodir erros se a chave estiver indisponível&lt;/li&gt;
+      &lt;li&gt;ID único&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Cache precisa morrer
+    &lt;ul&gt;
+      &lt;li&gt;A administração do cache precisa ser feita por fora da app&lt;/li&gt;
+      &lt;li&gt;O cache precisa ser invalidado quando houver dados novos&lt;/li&gt;
+      &lt;li&gt;Necessário determinar um tempo de vida&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Tolerância de consistência
+    &lt;ul&gt;
+      &lt;li&gt;Deve ser aceito um dado inválido por alguns instantes&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;criando-um-par-cachevel-usando-redis&quot;&gt;Criando um par cacheável usando Redis&lt;/h2&gt;
+
+&lt;p&gt;Qualquer estrutura de dados criada do Redis serve como cache, já que será armazenada na memória. Assim, um simples comando SET armazena e um GET irá retorná-lo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;SET cached_data 123
+OK
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;GET cached_data
+&lt;span class=&quot;s2&quot;&gt;&quot;123&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Como fazer o dado ser expirável? Usando um SETEX&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;SETEX cached_data 10 123
+OK
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;TTL cached_data
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 9&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Neste comando o valor ‘10’ é o tempo em segundos em que este dado estará disponível, logo depois de 10s o GET retorna nulo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;SETEX cached_data 10 123
+OK
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;GET cached_data
+&lt;span class=&quot;s2&quot;&gt;&quot;123&quot;&lt;/span&gt;
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;GET cached_data
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;nil&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Porém, se queremos usar outras estruturas de dados do Redis, o comando que deixa os dados invalidados será o EXPIRE. No exemplo abaixo, crio uma lista com 4 elementos e depois de expirada em 5s, a lista retorna tamanho vazio:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;LPUSH cached_list 1 2 3 4
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 4
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;LLEN cached_list
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 4
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;EXPIRE cached_list 5
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;LLEN cached_list
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 0&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Recomenda-se o uso do MULTI para inserir os dados e setar o cache de forma atômica.&lt;/p&gt;
+
+&lt;p&gt;O ponto fraco de usar outras estruturas de dados está em que o cache é cancelado quando a estrutura é alterada. Podemos checar quanto tempo de vida a estrutura de dados tem com o comando TTL que retorna os segundos restantes:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;LPUSH cached_list 1 2 3 4
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 4
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;EXPIRE cached_list 10
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;LPUSH cached_list 5
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 5
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;TTL cached_list
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 0&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h2 id=&quot;expirando-chaves-de-forma-manual&quot;&gt;Expirando chaves de forma manual&lt;/h2&gt;
+
+&lt;p&gt;Outra propriedade importante é invalidar o cache de forma manual. A sua aplicação pode necessitar fazer isso se a fonte original foi modificada ou se o cache pode conter uma inconsistência importante. Para isso podemos usar o comando UNLINK:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;SETEX cached_data 10 123
+OK
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;UNLINK cached_data
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 1
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;TTL cached_data
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;integer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; -2
+&lt;span class=&quot;gp&quot;&gt;192.168.99.101:32768&amp;gt; &lt;/span&gt;GET cached_data
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;nil&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Este comando é similar ao DEL, porém, o UNLINK é feito em outra thread, ou seja, não fica bloqueado esperando a execução do comando.&lt;/p&gt;
+
+&lt;h2 id=&quot;referncias&quot;&gt;Referências&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://redis.io/commands/setex&quot;&gt;SETEX&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://redis.io/commands/expire&quot;&gt;EXPIRE&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://redis.io/commands/unlink&quot;&gt;UNLINK&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://redis.io/commands/ttl&quot;&gt;TTL&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Sat, 21 Jul 2018 08:00:36 -0300</pubDate>
+        <link>http://crivelaro.me/redis/2018/07/21/cache-com-redis.html</link>
+        <guid isPermaLink="true">http://crivelaro.me/redis/2018/07/21/cache-com-redis.html</guid>
+        
+        <category>redis</category>
+        
+        <category>cache</category>
+        
+        
+        <category>redis</category>
+        
+      </item>
+    
+      <item>
+        <title>Padrões e Boas Práticas de Testes de tela em Python</title>
+        <description>&lt;p&gt;Minha talk &lt;strong&gt;*Padrões e Boas Práticas de Testes de Tela em Python&lt;/strong&gt; no &lt;strong&gt;Python Sudeste 2018&lt;/strong&gt; em São Paulo.&lt;/p&gt;
+
+&lt;script async=&quot;&quot; class=&quot;speakerdeck-embed&quot; data-id=&quot;36a25e6a17e245b1b68ba26b07f84f2d&quot; data-ratio=&quot;1.77725118483412&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
+
+</description>
+        <pubDate>Fri, 30 Mar 2018 08:00:36 -0300</pubDate>
+        <link>http://crivelaro.me/programming/2018/03/30/padroes-testes-tela.html</link>
+        <guid isPermaLink="true">http://crivelaro.me/programming/2018/03/30/padroes-testes-tela.html</guid>
+        
+        <category>talks</category>
+        
+        
+        <category>programming</category>
+        
+      </item>
+    
+      <item>
+        <title>When and how to automate external resources testing</title>
+        <description>&lt;p&gt;Always developers come across with external integrations in a large software such as payment, trackers, APIs and file storage. When testing, traditional questions rise up: should I connect directly to this external service? Should I test with mocks or direct connections? How to prepare data on the other software to be integrated?&lt;/p&gt;
+
+&lt;p&gt;There are passionate opinions pending to Yes, you must connect or No, never connect to third party services.&lt;/p&gt;
+
+&lt;p&gt;By my experience, there is no simple answer and the situation changes in every project. So, I created a personal guide and I hope it may help you to decide when to test and how to do it.&lt;/p&gt;
+
+&lt;p&gt;I divided this subject in a series of articles:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;What is an External Service&lt;/li&gt;
+  &lt;li&gt;When to connect to an external service when testing&lt;/li&gt;
+  &lt;li&gt;When not connect when testing and alternatives&lt;/li&gt;
+  &lt;li&gt;How to make a simulator&lt;/li&gt;
+  &lt;li&gt;Testing network conditions with Mock Server&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;first-of-all-what-i-consider-as-an-external-resource&quot;&gt;First of all, what I consider as an external resource&lt;/h2&gt;
+
+&lt;p&gt;I consider as external resource everything with an I/O operation, besides user interaction, so when a user connects to your app server by HTTP, I do not considered as an external resource.&lt;/p&gt;
+
+&lt;p&gt;In this logic, your app acts as a client to the external service (not always, like web hooks, but I think you got the ideia 😉 ). Another consideration is the service becoming unexpected unavailable, so I should consider failures at any moment.&lt;/p&gt;
+
+&lt;p&gt;Some examples of what can be an external resource:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;OS file services&lt;/strong&gt;: Saving in disk is an old and simple case since the beginning of computing, however, in a large and long term software. But the  times changed and today we work in Cloud Servers and PaaS such as Heroku, whose disks are totally ephemeral and your app is moved up any moment.
+    &lt;ul&gt;
+      &lt;li&gt;Common issues:
+        &lt;ul&gt;
+          &lt;li&gt;Disk is full&lt;/li&gt;
+          &lt;li&gt;Directory does not exists&lt;/li&gt;
+          &lt;li&gt;Permissions were revoked&lt;/li&gt;
+          &lt;li&gt;File to be opened is not present&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;OS network services&lt;/strong&gt;: STMP is a traditional protocol and mail servers are a rock in availability. However, the OS may kill one of these services or simply the port in OS can be blocked by an Firewall;
+    &lt;ul&gt;
+      &lt;li&gt;Common issues:
+        &lt;ul&gt;
+          &lt;li&gt;Process were killed by OS&lt;/li&gt;
+          &lt;li&gt;Server is not responding&lt;/li&gt;
+          &lt;li&gt;Port is blocked by Firewall&lt;/li&gt;
+          &lt;li&gt;Timeouts&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Third party Systems&lt;/strong&gt;: services running in other computers and communicating by  HTTP, FTP, S3 and other protocols. Here the list is large: Mandrill, PayPal. Here the challenge is testing an integration with production running service by other company.
+    &lt;ul&gt;
+      &lt;li&gt;Common issues:
+        &lt;ul&gt;
+          &lt;li&gt;Services don’t provide a sandbox environment for tests&lt;/li&gt;
+          &lt;li&gt;Hard to check if the service in tests end-to-end&lt;/li&gt;
+          &lt;li&gt;Nature of service such as Payment&lt;/li&gt;
+          &lt;li&gt;Services change their state&lt;/li&gt;
+          &lt;li&gt;Undoable actions&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Services in our network&lt;/strong&gt;: Services or microservices should be in-house are easier to test, isn’t ? Not really as long as you have lesser resources (time, money and people) than a company that focus on a product. Besides the same issues from third party systems, keep an infrastructure is an additional challenge.
+    &lt;ul&gt;
+      &lt;li&gt;Common issues:
+        &lt;ul&gt;
+          &lt;li&gt;Costs of operation&lt;/li&gt;
+          &lt;li&gt;Deploy a test environment&lt;/li&gt;
+          &lt;li&gt;End-to-end or alone&lt;/li&gt;
+          &lt;li&gt;Change other service’s state&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In next article, I show what to take account when testing an external resource and when I should automate those tests.&lt;/p&gt;
+</description>
+        <pubDate>Sat, 16 Dec 2017 09:00:36 -0200</pubDate>
+        <link>http://crivelaro.me/testing/2017/12/16/when-and-how-to-automate-external-resources-testing.html</link>
+        <guid isPermaLink="true">http://crivelaro.me/testing/2017/12/16/when-and-how-to-automate-external-resources-testing.html</guid>
+        
+        <category>testing</category>
+        
+        
+        <category>testing</category>
+        
+      </item>
+    
+      <item>
+        <title>Se é possível fazer, é possível testar</title>
+        <description>&lt;p&gt;É um mantra que sempre aplico aos meus projetos e passo às pessoas com quem eu trabalho.&lt;/p&gt;
+
+&lt;p&gt;Já fui contra testes no início da carreira, já resisti muito ao TDD e depois de muito código problemático, aprendi o valor dos testes. Mas mais importante do que simplesmente testar, é como fazer os testes terem valor no projeto.&lt;/p&gt;
+
+&lt;p&gt;Aqui neste post quero por alguns pontos que considero importante para a mentalidade de testes e como elas afetam o projeto e o time.&lt;/p&gt;
+
+&lt;h2 id=&quot;planejamento-do-teste&quot;&gt;Planejamento do teste&lt;/h2&gt;
+
+&lt;p&gt;Não só só usar os testes para o TDD como metodologia de desenvolvimento, mas também usa-los para o levantamento de requisitos. Assim, sempre que uma funcionalidade é especificada, os testes ajudam a levantar detalhes funcionais:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Que tipo de usuário pode executar esta ação?&lt;/li&gt;
+  &lt;li&gt;Qual a entrada e resultado esperado em um caso comum?&lt;/li&gt;
+  &lt;li&gt;Quais entradas fazem fluxos diferentes?&lt;/li&gt;
+  &lt;li&gt;Quais são os casos de falha?&lt;/li&gt;
+  &lt;li&gt;Quais são os pré-requisitos do sistema para fazer o teste?&lt;/li&gt;
+  &lt;li&gt;Preciso de alguma ferramenta ou adaptação para o teste?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Para o desenvolvedor, o teste automatizado é o artefato mais interessante e para o dono do produto, o plano de testes e aceitação em um planilha de Excel pode ser um guia de testes e os critérios de aceitação.&lt;/p&gt;
+
+&lt;p&gt;Então o objetivo é mais profundo: Só no ato de planejar o teste, já ocorre a especificação funcional e detalhes de implementação. Se os testes funcionais estão planejados, o desenvolvedor terá um critério de parada, sabendo o limite de desenvolvimento da tarefa e o cliente já terá um plano para verificar o software.&lt;/p&gt;
+
+&lt;p&gt;Nos passos seguintes do processo de Engenharia de Software que é a Especificação Técnica e o Desenvolvimento, um problema comum enfrentado em um software complexo é como testar condições difíceis. Exemplos:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Dependência de integrações, integração que pode ter estado&lt;/li&gt;
+  &lt;li&gt;Simular condições que não é possível em um ambiente de testes como condições de rede&lt;/li&gt;
+  &lt;li&gt;Simular ataques ou mesmo carga de usuários&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Ao planejar o teste, podemos ter que ser criativos em como testar uma condição que não é trivial e demonstrável com apenas o código de produção. Assim, se torna necessário o desenvolvimento de scripts e simuladores que auxiliem os testes.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;Resumo:&lt;/em&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Planejar o teste&lt;/li&gt;
+  &lt;li&gt;Tirar artefatos como Plano de Testes, Especificação Funcional&lt;/li&gt;
+  &lt;li&gt;Ter um critério de parada de desenvolvimento com as condições de aceite&lt;/li&gt;
+  &lt;li&gt;Criar métodos e ferramentas que auxiliem o teste&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;estimar-o-tempo-gasto-nos-testes-junto-com-as-tarefas&quot;&gt;Estimar o tempo gasto nos testes junto com as tarefas&lt;/h2&gt;
+
+&lt;p&gt;Assim como não existe almoço grátis, também não existe teste grátis. Sim, se no seu processo de engenharia os testes e a qualidade são valores fortes, precisam entrar na conta do projeto. Um erro clássico de desenvolvedores é não incluir os tempo que gasta nos testes em suas estimativas.&lt;/p&gt;
+
+&lt;p&gt;Por exemplo: uma mudança de regra de negócio pontual que demore tudo 2 horas mas o teste precise ser feito em 6 horas pelas pré-condições e casos de uso. Logo, o tempo total para fazer a mudança é de 8 horas e não 2 horas como é comum de ser estimado.&lt;/p&gt;
+
+&lt;p&gt;Quando isso acontece demostra que a funcionalidade é crítica, a montagem da situação do teste é complexa ou mesmo construção a infraestrutura prévia de testes é pequena. Neste momento, vale a pena por na conta da tarefa o planejamento de todo o teste e tê-lo para sempre, podendo ser replicado por outras pessoas conforme a necessidade.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Resumo:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Considerar o tempo de testar a funcionalidade manualmente;&lt;/li&gt;
+  &lt;li&gt;Considerar o tempo de fazer teste automatizado.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;tarefa--s-considerada-pronta-se-o-teste-foi-feito&quot;&gt;Tarefa é só considerada pronta se o teste foi feito&lt;/h2&gt;
+
+&lt;p&gt;Já ouvi muitas vezes: “Está pronto, só falta testar”. Ou seja, não se tem ideia nenhuma se o código funciona, quase um problema de “Gato de Schrödinger”. Na minha opinião o trabalho ainda está na metade.&lt;/p&gt;
+
+&lt;p&gt;Em Pull Requests, só de baixar o código e rodar na minha máquina, já vi a funcionalidade desenvolvida não funcionando em nenhum caso. Ou seja, faltou o simples teste manual da funcionalidade e se fosse entregue ao cliente, obviamente não ia funcionar.&lt;/p&gt;
+
+&lt;p&gt;Se o time já tem o hábito de fazer testes e TDD ótimo. Outro mal hábito que surge frequentemente, é o desenvolvedor fazer mudanças rápidas e confiar apenas na suíte de testes automatizados (já fiz este erro várias vezes). Quando vai para o teste manual, quebra.&lt;/p&gt;
+
+&lt;p&gt;Não deixe este problema ser descoberto depois do ciclo de desenvolvimento, isso geralmente gera estresse na equipe e um mal estar com o cliente.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Resumo:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Testes automatizados feitos;&lt;/li&gt;
+  &lt;li&gt;Testes manuais executados pelo desenvolvedor.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;teste-tambm--cdigo-e-precisa-de-uma-boa-arquitetura&quot;&gt;Teste também é código e precisa de uma boa arquitetura&lt;/h2&gt;
+
+&lt;p&gt;Já vi em muitos casos o código principal ter uma preocupação grande com arquitetura, estilo e boas práticas e por outro lado, o código do teste ser mal feito, difícil de entender e difícil de modificar.&lt;/p&gt;
+
+&lt;p&gt;O código dos testes automatizados deve-se ter o mesmo carinho do código de produção, especialmente porque o código de teste é um código não-testável (afinal, queremos evitar o loops infinitos).&lt;/p&gt;
+
+&lt;p&gt;Boas práticas como AAA (http://wiki.c2.com/?ArrangeActAssert) e padrões de projeto como Page Objects (https://martinfowler.com/bliki/PageObject.html), ajudam o código de teste ser compreensível, ser extensíveis e terem responsabilidades bem definidas.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Resumo:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Código do teste bem feito reflete em um código de produção bem feito;&lt;/li&gt;
+  &lt;li&gt;Código de teste tem bons padrões do framework e estruturais.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;e-quando-assumir-o-risco-de-no-testar&quot;&gt;E quando assumir o risco de não testar?&lt;/h2&gt;
+
+&lt;p&gt;O custo de fazer teste ser muito caro é um fator importante a se considerar. Se a ordem de grandeza de um teste é 10 vezes a da funcionalidade, é de se questionar se a automatização vale pena. Isso é bem comum para testes complexos como Teste de Carga que precisa de uma grande infraestrutura e planejamento. Alternativas é sempre o teste manual ou verificação de comportamento em produção mesmo.&lt;/p&gt;
+
+&lt;p&gt;Outro caso comum são correções de falhas emergenciais. Neste caso, deve-se sim testar manualmente a funcionalidade problemática e subir a correção o mais rápido possível. Geralmente uso a automatização e corrijo se o teste quebra, mas evito fazer alguma modificação substancial que pode ser feita após a situação se normalizar.&lt;/p&gt;
+
+&lt;p&gt;Prazo de projeto em que vc não participou já passou. Este caso deve ser evitado ao máximo, mas infelizmente pegamos projetos com prazos que não foram estimados por nós. Neste caso, o ideal é tentar negociar o prazo para incluir os testes ou diminuir o escopo da funcionalidade. Sempre é melhor entregar menos com mais qualidade. Porém, quando não é possível, deve-se focar nos testes automatizados mais simples e nos testes manuais.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Resumo:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Não testar quando o custo do teste é proibitivo;&lt;/li&gt;
+  &lt;li&gt;Reduzir a quantidade para testes em correções emergenciais;&lt;/li&gt;
+  &lt;li&gt;Focar nos testes simples e manuais quando  prazo do projeto não permite testes com qualidade.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Tue, 28 Nov 2017 09:00:36 -0200</pubDate>
+        <link>http://crivelaro.me/testing/2017/11/28/se-e-possivel-fazer-e-possivel-testar.html</link>
+        <guid isPermaLink="true">http://crivelaro.me/testing/2017/11/28/se-e-possivel-fazer-e-possivel-testar.html</guid>
+        
+        <category>testing</category>
+        
+        
+        <category>testing</category>
+        
+      </item>
+    
+      <item>
+        <title>Pesquisa sobre Testes de Software para Devs</title>
+        <description>&lt;p&gt;Estou fazendo uma pesquisa sobre o interesse e conhecimento em Testes de Software para desenvolvedores.&lt;/p&gt;
+
+&lt;p&gt;Poderiam me ajudar? Só vão gastar 3 minutinhos ;-).&lt;/p&gt;
+
+&lt;p&gt;Quem puder, compartilhe pfv. Muito obrigado :-)&lt;/p&gt;
+
+&lt;div class=&quot;typeform-widget&quot; data-url=&quot;https://celsocrivelaro.typeform.com/to/UzR1tb&quot; style=&quot;width: 100%; height: 500px;&quot;&gt; &lt;/div&gt;
+&lt;script&gt; (function() { var qs,js,q,s,d=document, gi=d.getElementById, ce=d.createElement, gt=d.getElementsByTagName, id=&quot;typef_orm&quot;, b=&quot;https://embed.typeform.com/&quot;; if(!gi.call(d,id)) { js=ce.call(d,&quot;script&quot;); js.id=id; js.src=b+&quot;embed.js&quot;; q=gt.call(d,&quot;script&quot;)[0]; q.parentNode.insertBefore(js,q) } })() &lt;/script&gt;
+&lt;div style=&quot;font-family: Sans-Serif;font-size: 12px;color: #999;opacity: 0.5; padding-top: 5px;&quot;&gt; powered by &lt;a href=&quot;https://www.typeform.com//?utm_campaign=UzR1tb&amp;amp;utm_source=typeform.com-11315361-Basic&amp;amp;utm_medium=typeform&amp;amp;utm_content=typeform-embedded-poweredbytypeform&amp;amp;utm_term=PT&quot; style=&quot;color: #999&quot; target=&quot;_blank&quot;&gt;Typeform&lt;/a&gt; &lt;/div&gt;
+</description>
+        <pubDate>Sat, 18 Nov 2017 09:00:36 -0200</pubDate>
+        <link>http://crivelaro.me/testing/2017/11/18/pesquisa-teste.html</link>
+        <guid isPermaLink="true">http://crivelaro.me/testing/2017/11/18/pesquisa-teste.html</guid>
+        
+        <category>testing</category>
+        
+        
+        <category>testing</category>
+        
+      </item>
+    
+      <item>
+        <title>Projeto de APIs</title>
+        <description>&lt;p&gt;Minha talk &lt;strong&gt;Projetos de APIs: O que pensar para APIs públicas, [micros]serviços e SPAS&lt;/strong&gt; no &lt;strong&gt;PythonBrasil 13&lt;/strong&gt; em Belo Horizonte.&lt;/p&gt;
+
+&lt;script async=&quot;&quot; class=&quot;speakerdeck-embed&quot; data-id=&quot;ac663fc633f140cea54185e58b6340b3&quot; data-ratio=&quot;1.77777777777778&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
+
+</description>
+        <pubDate>Sun, 08 Oct 2017 08:00:36 -0300</pubDate>
+        <link>http://crivelaro.me/programming/2017/10/08/projeto-de-apis.html</link>
+        <guid isPermaLink="true">http://crivelaro.me/programming/2017/10/08/projeto-de-apis.html</guid>
+        
+        <category>talks</category>
+        
+        
+        <category>programming</category>
+        
+      </item>
+    
+      <item>
+        <title>Web Server x Application Server</title>
+        <description>&lt;p&gt;Foi uma pergunta de uma amiga que me motivou a escrever este post. No começo da minha carreira essa diferença também não me era clara e demorei alguns anos (e alguns tropeços) para entendê-los.&lt;/p&gt;
+
+&lt;p&gt;Como acho muito legal compartilhar conhecimento, aqui vai uma explicação de cada um e com montar uma boa arquitetura.&lt;/p&gt;
+
+&lt;p&gt;Ambos trabalham como aplicação servidora que usa redes, entendem protocolo HTTP e normalmente respondem HTML. Mas na prática são muito mais que isso, e o objetivo este meu post é explicar o funcionamento de cada um e o porque se deve usar ambos ao mesmo tempo.&lt;/p&gt;
+
+&lt;h2 id=&quot;web-server&quot;&gt;Web Server&lt;/h2&gt;
+
+&lt;p&gt;Quando foram criados, os web servers foram feitos para apenas servir HTML estático, imagens e pequenos arquivos. Hoje, evoluíram para aplicações robustas com múltiplos propósitos.&lt;/p&gt;
+
+&lt;p&gt;Implementações mais conhecidas:
+•	Apache HTTP
+•	Nginx&lt;/p&gt;
+
+&lt;p&gt;São aplicações compiladas e otimizadas para trabalhar com redes, gerenciamento de memória e paralelização de tarefas, trabalham com grande desempenho, e normalmente feitas em C, acessando diretamente as bibliotecas do sistema operacional. Ou seja, são “parrudos”.&lt;/p&gt;
+
+&lt;p&gt;Algumas funções interessantes que web servers podem desempenhar:&lt;/p&gt;
+
+&lt;h3 id=&quot;servir-vrios-sites&quot;&gt;Servir vários sites&lt;/h3&gt;
+
+&lt;p&gt;Uma configuração comum em web servers, é ele mesmo responder a vários sites ou aplicações, assim, quando requisição chega pelo mesmo IP mas com host diferente, o web server sabe para quem redirecionar.&lt;/p&gt;
+
+&lt;h3 id=&quot;tempo-de-resposta&quot;&gt;Tempo de resposta&lt;/h3&gt;
+
+&lt;p&gt;O web server sabe muito bem trabalhar com arquivos estáticos como uma página HTML, assets como imagens, vídeos, arquivos Javascript e CSS. &lt;/p&gt;
+
+&lt;p&gt;Ele consegue fazer isso usando cache e compactação o que dá uma resposta muito mais rápida e menor tempo de transmissão. Se estamos falando de HTTP 2 (nova versão do protocolo HTTP, ainda em implementação), temos várias otimizações como resposta de várias requisições em um request e envio de dados binários. Tudo para otimizar o recurso de rede.&lt;/p&gt;
+
+&lt;h3 id=&quot;funes-de-firewall&quot;&gt;Funções de Firewall&lt;/h3&gt;
+
+&lt;p&gt;Um site pode ser um acesso alto repentino ou por um sucesso momentâneo ou mesmo por um ataque massivo por robôs programados por hacker.  Para se proteger, o web server pode ter configurações de firewall para se proteger e recusar conexões, evitando uma sobrecarga no uso dos recursos computacionais.&lt;/p&gt;
+
+&lt;p&gt;Essas proteções são o próprio cache que envia dados em memória, o bloqueio de requisições vindos do mesmo IP em tempos muito curtos, timeout de conexões, entre outras funções.&lt;/p&gt;
+
+&lt;h3 id=&quot;proxy-reverso-e-load-balancer&quot;&gt;Proxy Reverso e Load Balancer&lt;/h3&gt;
+
+&lt;p&gt;Outro modo de usar um web server é ele servir como Proxy Reverso, ou seja, ele redireciona as requisições para outra aplicação que responde HTTP e retorna ao usuário quando for respondido.&lt;/p&gt;
+
+&lt;p&gt;Com isso, o próprio web server pode trabalhar como balanceador de carga, distribuindo o tratamento de requisições pesadas para outras máquinas.&lt;/p&gt;
+
+&lt;h2 id=&quot;application-server&quot;&gt;Application Server&lt;/h2&gt;
+
+&lt;p&gt;Essa é o servidor web que utiliza programação. Ao receber uma requisição HTTP com os parâmetros e URL, o servidor de aplicação roda um processamento programado e devolve uma página totalmente dinâmica.&lt;/p&gt;
+
+&lt;p&gt;Aqui entram os programadores especializados em uma linguagem de programação que rodam o seu software usando um banco de dados e outras integrações na maioria dos casos.&lt;/p&gt;
+
+&lt;p&gt;Alguns exemplos:
+•	Java: Tomcat e Jetty
+•	Ruby: Puma, Unicorn e Passenger
+•	Python: Twisted, Tornado e Gunicorn
+•	PHP: mod_php&lt;/p&gt;
+
+&lt;p&gt;Estes servers basicamente carregam as aplicações desenvolvidas em memória e fazem o processamento a partir das URL e dados de entrada. Com as informações processadas, os application servers geram um HTML que é retornado ao usuário.&lt;/p&gt;
+
+&lt;p&gt;Desta o site que é fornecido ao usuário é personalizado como o Home Banking, Redes Sociais ou sites de Compras.&lt;/p&gt;
+
+&lt;p&gt;O que tornar os applications server mais interessantes, não é só a resposta HTML ou atuar como servidores wes, mas com  eles podemos criar também APIs que é uma forma de comunicação entre softwares remotos.&lt;/p&gt;
+
+&lt;p&gt;Tradicionalmente o formato de resposta pode ser um arquivo JSON ou XML que é interpretado por uma outra aplicação.&lt;/p&gt;
+
+&lt;p&gt;JSON pode ter o seguinte formato:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-json&quot; data-lang=&quot;json&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“nome”:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“Celso&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;Crivelaro”,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+  &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“site”:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“http://crivelaro.me”,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+   &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;data_ultima_publicacao:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;“2017-04-08”&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h2 id=&quot;boa-prtica-web-server-na-frente-de-application-server&quot;&gt;Boa Prática: Web Server na frente de Application Server&lt;/h2&gt;
+
+&lt;p&gt;Por que devemos fazer isso? Se o Application Server sabe fazer boa parte do trabalho, por que preciso de um web server?&lt;/p&gt;
+
+&lt;p&gt;Como o web server é mais robusto em trabalhar com conexões, têm funções de Firewall e pode ser um proxy reverso; ele pode trabalhar melhor com muitas conexões e transferindo a parte do processamento lento aos application servers. Assim, uma sobrecarga pode ser facilmente gerida pelo web server, passando a requisições ao application server&lt;/p&gt;
+
+&lt;p&gt;Para entender a escala do problema, um web server consegue gerenciar milhares de conexões na mesma máquina. Já o application server em uma máquina robusta aguenta algumas dezenas, chegando em centenas de conexões.&lt;/p&gt;
+
+&lt;p&gt;Se usarmos a configuração de proxy, podemos distribuir o processamento em diversas máquinas, podendo fazer um balanceamento e melhorando a disponibilidade, já que em uma eventual falha em uma máquina, as outras continuam respondendo.&lt;/p&gt;
+
+&lt;h3 id=&quot;como-se-comunicam&quot;&gt;Como se comunicam?&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Proxy Pass&lt;/strong&gt;: ou seja, o webserver pega a requisição HTTP, filtra e repassa ela totalmente para o application server.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Unix sockets&lt;/strong&gt;: Para quem usa Linux, pode usar um socket interno que basicamente a comunicação é feita por arquivos.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;CGI (Common Gateway Interface)&lt;/strong&gt;: Protocolo para comunicação de proxies que funcionam como web services.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Referências:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.digitalocean.com/community/tutorials/a-comparison-of-web-servers-for-python-based-web-applications&quot;&gt;Comparisons of webservers for Python&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Livro: &lt;a href=&quot;https://www.casadocodigo.com.br/products/livro-desconstruindo-web&quot;&gt;Desconstruindo a Web&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.nginx.com/&quot;&gt;Nginx&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://httpd.apache.org/&quot;&gt;Apache&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+</description>
+        <pubDate>Sun, 09 Apr 2017 10:11:36 -0300</pubDate>
+        <link>http://crivelaro.me/programming/2017/04/09/application-server-x-web-server.html</link>
+        <guid isPermaLink="true">http://crivelaro.me/programming/2017/04/09/application-server-x-web-server.html</guid>
+        
+        <category>server</category>
+        
+        
+        <category>programming</category>
+        
+      </item>
+    
+      <item>
+        <title>Testing Network Conditions with ToxiProxy</title>
+        <description>&lt;p&gt;My talk &lt;strong&gt;Testing Network Conditions with ToxiProxy&lt;/strong&gt; in &lt;strong&gt;Agile Testers Conference 2017 - SP&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;script async=&quot;&quot; class=&quot;speakerdeck-embed&quot; data-id=&quot;8a256c77323d40d79eaf49273af06312&quot; data-ratio=&quot;1.77777777777778&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
+
+</description>
+        <pubDate>Sat, 18 Mar 2017 10:11:36 -0300</pubDate>
+        <link>http://crivelaro.me/programming/2017/03/18/testing-network-conditions-talk.html</link>
+        <guid isPermaLink="true">http://crivelaro.me/programming/2017/03/18/testing-network-conditions-talk.html</guid>
+        
+        <category>talks</category>
+        
+        
+        <category>programming</category>
+        
+      </item>
+    
+      <item>
+        <title>Como se prepara a chegada de novos desenvolvedores</title>
+        <description>&lt;p&gt;Sempre é uma novidade a troca de um emprego para o desenvolvedor de software: aprender sobre o negócio da empresa, sobre as linguagens/frameworks/tecnologias da empresa e finalmente sobre o processo.&lt;/p&gt;
+
+&lt;p&gt;Infelizmente há um paradoxo com o tratamento do novo funcionário: o querem o mais rápido possível na equipe e quando este chega, nada está preparado. E no primeiro momento surgem dores no novo funcionário e na sua equipe:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Desconhecimento da tecnologia (linguagem, frameworks);&lt;/li&gt;
+  &lt;li&gt;Desconhecimento da instalação dos projetos (passar dias instalando tudo);&lt;/li&gt;
+  &lt;li&gt;Desconhecimento dos processos;&lt;/li&gt;
+  &lt;li&gt;Ainda não tem máquina disponível;&lt;/li&gt;
+  &lt;li&gt;Não consegue ter acesso a nenhum sistema interno;&lt;/li&gt;
+  &lt;li&gt;A quem se deve perguntar sobre o projeto?&lt;/li&gt;
+  &lt;li&gt;A equipe sofre paradas para ajudar no novo dev;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Outro ponto que quero sensibilizar é a primeira impressão de quem chega: Como vai exigir qualidade, empenho e motivação de um funcionário, se no seu primeiro dia a empresa não estava preparada a sua vinda?&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“Você nunca tem uma segunda chance de causar uma primeira impressão” (Aaron Burns)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Se um dev escolheu sair da sua zona de conforto para ir para a sua empresa, é porque ele está interessado em aprender coisas novas, estar em um projeto novo e &lt;strong&gt;quer produzir rapidamente&lt;/strong&gt;. Ninguém muda de emprego para ficar lendo documentação, ficar instalando o ambiente ou ficar vendo código sem saber o que faz.&lt;/p&gt;
+
+&lt;p&gt;O ideal é reduzir este tempo que pode demorar até 3 meses para o mínimo possível. Como podemos fazer?&lt;/p&gt;
+
+&lt;h2 id=&quot;para-quem-no--este-post-e-o-que-no--este-post&quot;&gt;Para quem não é este post e o que não é este post&lt;/h2&gt;
+
+&lt;p&gt;Este é um post para devs e seus coordenadores e não para gerentões ou profissionais de RH. Minha intenção aqui é dar dicas de preparação aos devs e ao time para a chegada de um novo par. Este post não é sobre como empresas devem contratar ou selecionar o seu desenvolvedor.&lt;/p&gt;
+
+&lt;p&gt;No lado pessoal, este post não é um dedo na cara dos lugares onde passei, apesar de ter visto esta situação por onde passei. O que quero dividir as experiências que deram certo e as experiências ruins que passei e vi com pares.&lt;/p&gt;
+
+&lt;h2 id=&quot;antes-da-chegada-do-novo-funcionrio&quot;&gt;Antes da chegada do novo funcionário&lt;/h2&gt;
+
+&lt;h3 id=&quot;d-um-computador-deste-o-primeiro-dia&quot;&gt;Dê um computador deste o primeiro dia&lt;/h3&gt;
+
+&lt;p&gt;Acho que quase em todas as empresas que passei o primeiro dia não tive um computador. Isso porque:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;O gestor esqueceu completamente o dia de entrada;&lt;/li&gt;
+  &lt;li&gt;O processo da empresa é burocrático para nova máquina para novo funcionário.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Não existe coisa mais desmotivante do que não ter o que fazer, ainda mais em um lugar novo.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Poxa, se você contratou um dev, dê um computador (e bom) deste o primeiro momento da empresa. Daí ele pode preparar o ambiente conforme as necessidades.&lt;/p&gt;
+
+&lt;h3 id=&quot;ter-acessos-e-senhas&quot;&gt;Ter acessos e senhas&lt;/h3&gt;
+
+&lt;p&gt;Também não adianta dar um computador se o funcionário não tem acesso a nenhum sistema interno e a base de código. Isso acontece também pelos mesmos motivos do computador no primeiro dia.&lt;/p&gt;
+
+&lt;p&gt;Monte uma lista de quais acessos os seu dev precisar para executar as principais funções desde o primeiro dia e garanta que os principais acessos estão garantidos.&lt;/p&gt;
+
+&lt;p&gt;Outro ponto importante: se sua empresa precisa de crachá para entrar, forneça o mais rápido possível. É péssimo sempre ter que pedir para alguém para abrir a porta e desconcentra quem está trabalhando.&lt;/p&gt;
+
+&lt;h2 id=&quot;primeira-semana&quot;&gt;Primeira semana&lt;/h2&gt;
+
+&lt;h3 id=&quot;explique-o-que-a-empresa-faz-e-a-importncia-do-projeto&quot;&gt;Explique o que a empresa faz e a importância do projeto&lt;/h3&gt;
+
+&lt;p&gt;Esta é uma atividade mais interessante para os coordenadores que têm visão macro. Já vi muito dev entrando em projeto que nem sabe para que serve dentro do propósito da empresa ou mesmo sabe pouco das regras de negócio.&lt;/p&gt;
+
+&lt;p&gt;Uma visão geral do projeto e da empresa ajuda a quem estar de fora a saber os pontos chaves que não foram explicados no processo seletivo.&lt;/p&gt;
+
+&lt;p&gt;Números de negócio, pontos fortes e pontos a melhorar dão uma visão dos desafios pela frente.&lt;/p&gt;
+
+&lt;h3 id=&quot;coach-com-o-novo-dev&quot;&gt;Coach com o novo dev&lt;/h3&gt;
+
+&lt;p&gt;Um fato que vi que gera uma certa angústia aos novatos, é para quem perguntar e se está atrapalhando o time. Já vi situações em que as pessoas evitam de ajudar o novato pois estão empenhadas nas entregas. Isso gera um desconforto e falta de confiança para quem está chegando e ao mesmo tempo atrasa o seu desenvolvimento dentro da equipe.&lt;/p&gt;
+
+&lt;p&gt;Uma experiência muito legal que participei é ter um dev mais experiente alocado exclusivamente para os primeiros dias desta pessoa. Esta pessoa era responsável por explicar o projeto, ajudar na instalação do ambiente de desenvolvimento, explicar uma base da linguagem/frameworks usados, enfim, irá ambientar o dev novo ao time.&lt;/p&gt;
+
+&lt;p&gt;Esse dev experiente não deve estar comprometido com as entregas naquele momento para que não fique preocupado com outros fatores além de ambientar o novo dev.&lt;/p&gt;
+
+&lt;h3 id=&quot;fazer-deploy-de-aplicao-no-primeiro-dia&quot;&gt;Fazer deploy de aplicação NO PRIMEIRO DIA&lt;/h3&gt;
+
+&lt;p&gt;Ao contratar um dev, o seu objetivo é entregar mais software, não apenas fazer. Ou seja, software vale mesmo quando está em produção.&lt;/p&gt;
+
+&lt;p&gt;Então, faça o seu novo dev por software em produção deste o primeiro dia! Mesmo que seja uma alteração no Readme do projeto.&lt;/p&gt;
+
+&lt;p&gt;Ao fazer isso, ele conhecerá o processo de ponta-a-ponto e perderá o medo de fazer o deploy da aplicação. Quanto mais cedo este dev entregar, mais produtivo ele é.&lt;/p&gt;
+
+&lt;h3 id=&quot;kit-boas-vindas&quot;&gt;Kit boas-vindas&lt;/h3&gt;
+
+&lt;p&gt;Se sua empresa dispõe de souvenirs como camisetas, caneca, canetas ou cadernos, já deixei tudo na mesma no primeiro dia. Faça-o vestir a camisa literalmente desde o primeiro dia.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/images/360i_welcome_kit.jpg&quot; alt=&quot;Kit boas vindas da 360i&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Kit boas vindas da i360. Fonte: &lt;a href=&quot;http://digiday.com/agencies/best-agency-employee-welcome-kits-2/&quot;&gt;Digiday&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Pode parece bobagem, mas kit boas-vindas tem sex appeal, o novo empregado vai compartilhar nas redes sociais e a sua empresa se torna atrativa.&lt;/p&gt;
+
+&lt;h2 id=&quot;processos-e-documentao&quot;&gt;Processos e Documentação&lt;/h2&gt;
+
+&lt;p&gt;Aqui também entra em atividades antes da contração, mas que ajuda o time todo em geral na troca de informações sobre o projeto.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Start Guide&lt;/strong&gt;: O que é e como funciona o projeto;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Como instalar o projeto&lt;/strong&gt;: Aqui é a pior parte. Ao tentar instalar o projeto de forma normal, o dev irá falhar miseravelmente, pois sempre tem um macetinho que não estava documentado. Logo documente:
+    &lt;ul&gt;
+      &lt;li&gt;Versão das dependências: Ruby 2.1.0&lt;/li&gt;
+      &lt;li&gt;Configurações: O que mudar nos arquivos de configuração&lt;/li&gt;
+      &lt;li&gt;Dependências: Ruby, Python, Banco de Dados, Servidor de File&lt;/li&gt;
+      &lt;li&gt;Decisões arquiteturais: Porque usamos microserviços neste caso…&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;automatizao-de-ambiente-de-dev&quot;&gt;Automatização de ambiente de dev&lt;/h3&gt;
+
+&lt;p&gt;Outra decisão muito interessante é automatizar a instalação do ambiente de desenvolvimento. Assim, todos os devs mantém um mesmo ambiente padronizado e é só rodar um script para se ter tudo funcionando.&lt;/p&gt;
+
+&lt;p&gt;Algumas opções para Linux / Mac:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Docker&lt;/li&gt;
+  &lt;li&gt;Vagrant&lt;/li&gt;
+  &lt;li&gt;Shell Scripts&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Afinal, ser dev é automatizar as coisas, então por que não automatizar o próprio ambiente?&lt;/p&gt;
+
+&lt;p&gt;Mesmo eu já sendo um veterano na empresa, esta automatização já me salvou a vida vários vezes depois de updates desastrados e trocas de máquinas. Só destruir e construir tudo de novo!&lt;/p&gt;
+
+</description>
+        <pubDate>Tue, 27 Dec 2016 18:11:36 -0200</pubDate>
+        <link>http://crivelaro.me/team/2016/12/27/onboarding-de-novos-devs.html</link>
+        <guid isPermaLink="true">http://crivelaro.me/team/2016/12/27/onboarding-de-novos-devs.html</guid>
+        
+        <category>docker</category>
+        
+        <category>vagrant</category>
+        
+        <category>career</category>
+        
+        
+        <category>team</category>
+        
+      </item>
+    
+      <item>
+        <title>Direnv para Variáveis de Ambiente e PATH</title>
+        <description>&lt;p&gt;Direnv é uma ferramenta tão útil que fiquei impressionado em ter descoberto agora. O seu objetivo é a gestão de variáveis de ambiente por diretório e a gestão da variável de ambiente PATH.&lt;/p&gt;
+
+&lt;p&gt;De acordo com o &lt;a href=&quot;https://12factor.net/pt_br/config&quot;&gt;The Twelve-Factor App&lt;/a&gt;, é uma  boa prática que as configurações estejam como  variáveis de ambiente. Alguns frameworks permitem que suas configurações sejam divididas por ambiente como o Rails e Phoenix, mas isso não é geral, especialmente para frameworks simples como PyBottle ou se usa bash scripts.&lt;/p&gt;
+
+&lt;p&gt;Como prefiro ferramentas agnósticas (que não seja ligado apenas à uma linguagem ou framework), o Direnv entra como uma ótima opção da configuração de ambiente de desenvolvimento.&lt;/p&gt;
+
+&lt;p&gt;No Mac, a sua instalação é simples:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;brew install direnv &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;O mesmo no Ubuntu/Debian:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;sudo apt-get install direnv &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Depois disto, precisa adicionar a inicialização na configuração do Bash. Se usa Bash tradicional, só adicionar no ~/.bashrc&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;$(&lt;/span&gt;direnv hook bash&lt;span class=&quot;k&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Para outros bashes como Zsh, Fish, veja a documentação: &lt;a href=&quot;http://direnv.net/&quot;&gt;http://direnv.net/&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;variveis-de-ambiente&quot;&gt;Variáveis de Ambiente&lt;/h2&gt;
+
+&lt;p&gt;Basta criar um arquivo .envrc no diretório em que está o projeto com o conteúdo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;  &lt;span class=&quot;nv&quot;&gt;FOO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;value&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Ao entrar e sair do diretório:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;╭─crivelaro@me:~/
+╰─λ &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;project/
+direnv: loading .envrc
+direnv: &lt;span class=&quot;nb&quot;&gt;export&lt;/span&gt; +FOO
+╭─crivelaro@me:~/me
+╰─λ &lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; ..
+direnv: unloading&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Assim, a variável de ambiente só fica disponível quando entro no diretório e dessa maneira posso usar a mesma variável para cada tipo de projeto o que é uma prática comum quando se usa projetos parecidos.&lt;/p&gt;
+
+&lt;h2 id=&quot;adicionando-diretrios-ao-path&quot;&gt;Adicionando diretórios ao PATH&lt;/h2&gt;
+
+&lt;p&gt;Essa é a funcionalidade que mais gosto do Direnv. Quando monto alguns projetos com um diretório &lt;strong&gt;bin&lt;/strong&gt; com alguns shell scripts, acho terrível ter que digitar algo como:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;./meu_script
+&lt;span class=&quot;gp&quot;&gt;$ &lt;/span&gt;bin/meu_script&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;No Linux ou Mac, um binário é chamado de acordo com os diretórios mapeados na variável de ambiente $PATH. O direnv pode configurar o PATH para que se tenha a configuração apenas para aquele projeto.&lt;/p&gt;
+
+&lt;p&gt;Para isso, mapeio o PATH para incluir a pasta de binários do projeto dentro do arquivo .envrc:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;PATH_add ./bin&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Pronto! Agora qualquer script executável pode ser chamado diretamente como qualquer software no Linux/Mac.&lt;/p&gt;
+
+&lt;p&gt;Quando saio do diretório, os binários não estão mais disponíveis pois o PATH voltou ao original.&lt;/p&gt;
+
+</description>
+        <pubDate>Sun, 27 Nov 2016 22:11:36 -0200</pubDate>
+        <link>http://crivelaro.me/tools/2016/11/27/ferramentas-direnv.html</link>
+        <guid isPermaLink="true">http://crivelaro.me/tools/2016/11/27/ferramentas-direnv.html</guid>
+        
+        <category>tools</category>
+        
+        
+        <category>tools</category>
+        
+      </item>
+    
+  </channel>
+</rss>
