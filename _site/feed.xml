@@ -6,9 +6,27 @@
 </description>
     <link>https://crivelaro.me/</link>
     <atom:link href="https://crivelaro.me/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sun, 26 Jan 2020 20:16:19 -0300</pubDate>
-    <lastBuildDate>Sun, 26 Jan 2020 20:16:19 -0300</lastBuildDate>
+    <pubDate>Mon, 27 Jan 2020 17:06:08 -0300</pubDate>
+    <lastBuildDate>Mon, 27 Jan 2020 17:06:08 -0300</lastBuildDate>
     <generator>Jekyll v3.8.5</generator>
+    
+      <item>
+        <title>Sistemas de Recomendação</title>
+        <description>&lt;p&gt;Apresentação feita na Revelo sobre Sistemas de Recomendação:&lt;/p&gt;
+
+&lt;script async=&quot;&quot; class=&quot;speakerdeck-embed&quot; data-id=&quot;3f6f5d89f0014fb6bfc0540673d6a4a7&quot; data-ratio=&quot;1.77777777777778&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
+
+</description>
+        <pubDate>Mon, 27 Jan 2020 17:00:36 -0300</pubDate>
+        <link>https://crivelaro.me/recommendation/2020/01/27/sistemas-recomendacao.html</link>
+        <guid isPermaLink="true">https://crivelaro.me/recommendation/2020/01/27/sistemas-recomendacao.html</guid>
+        
+        <category>recommendation</category>
+        
+        
+        <category>recommendation</category>
+        
+      </item>
     
       <item>
         <title>Cache com Redis</title>
@@ -676,75 +694,6 @@ OK
         
         
         <category>team</category>
-        
-      </item>
-    
-      <item>
-        <title>Direnv para Variáveis de Ambiente e PATH</title>
-        <description>&lt;p&gt;Direnv é uma ferramenta tão útil que fiquei impressionado em ter descoberto agora. O seu objetivo é a gestão de variáveis de ambiente por diretório e a gestão da variável de ambiente PATH.&lt;/p&gt;
-
-&lt;p&gt;De acordo com o &lt;a href=&quot;https://12factor.net/pt_br/config&quot;&gt;The Twelve-Factor App&lt;/a&gt;, é uma  boa prática que as configurações estejam como  variáveis de ambiente. Alguns frameworks permitem que suas configurações sejam divididas por ambiente como o Rails e Phoenix, mas isso não é geral, especialmente para frameworks simples como PyBottle ou se usa bash scripts.&lt;/p&gt;
-
-&lt;p&gt;Como prefiro ferramentas agnósticas (que não seja ligado apenas à uma linguagem ou framework), o Direnv entra como uma ótima opção da configuração de ambiente de desenvolvimento.&lt;/p&gt;
-
-&lt;p&gt;No Mac, a sua instalação é simples:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;brew &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;direnv &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;O mesmo no Ubuntu/Debian:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;direnv &lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Depois disto, precisa adicionar a inicialização na configuração do Bash. Se usa Bash tradicional, só adicionar no ~/.bashrc&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;eval&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;$(&lt;/span&gt;direnv hook bash&lt;span class=&quot;si&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Para outros bashes como Zsh, Fish, veja a documentação: &lt;a href=&quot;http://direnv.net/&quot;&gt;http://direnv.net/&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&quot;variáveis-de-ambiente&quot;&gt;Variáveis de Ambiente&lt;/h2&gt;
-
-&lt;p&gt;Basta criar um arquivo .envrc no diretório em que está o projeto com o conteúdo:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;  &lt;span class=&quot;nv&quot;&gt;FOO&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;value&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Ao entrar e sair do diretório:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;╭─crivelaro@me:~/
-╰─λ &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;project/
-direnv: loading .envrc
-direnv: &lt;span class=&quot;nb&quot;&gt;export&lt;/span&gt; +FOO
-╭─crivelaro@me:~/me
-╰─λ &lt;span class=&quot;nb&quot;&gt;cd&lt;/span&gt; ..
-direnv: unloading&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Assim, a variável de ambiente só fica disponível quando entro no diretório e dessa maneira posso usar a mesma variável para cada tipo de projeto o que é uma prática comum quando se usa projetos parecidos.&lt;/p&gt;
-
-&lt;h2 id=&quot;adicionando-diretórios-ao-path&quot;&gt;Adicionando diretórios ao PATH&lt;/h2&gt;
-
-&lt;p&gt;Essa é a funcionalidade que mais gosto do Direnv. Quando monto alguns projetos com um diretório &lt;strong&gt;bin&lt;/strong&gt; com alguns shell scripts, acho terrível ter que digitar algo como:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./meu_script
-&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;bin/meu_script&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;No Linux ou Mac, um binário é chamado de acordo com os diretórios mapeados na variável de ambiente $PATH. O direnv pode configurar o PATH para que se tenha a configuração apenas para aquele projeto.&lt;/p&gt;
-
-&lt;p&gt;Para isso, mapeio o PATH para incluir a pasta de binários do projeto dentro do arquivo .envrc:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;PATH_add ./bin&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Pronto! Agora qualquer script executável pode ser chamado diretamente como qualquer software no Linux/Mac.&lt;/p&gt;
-
-&lt;p&gt;Quando saio do diretório, os binários não estão mais disponíveis pois o PATH voltou ao original.&lt;/p&gt;
-
-</description>
-        <pubDate>Sun, 27 Nov 2016 22:11:36 -0200</pubDate>
-        <link>https://crivelaro.me/tools/2016/11/27/ferramentas-direnv.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/tools/2016/11/27/ferramentas-direnv.html</guid>
-        
-        <category>tools</category>
-        
-        
-        <category>tools</category>
         
       </item>
     
