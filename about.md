@@ -4,13 +4,17 @@ title: About
 permalink: /about/
 ---
 
-I'm Celso Crivelaro, software developer based on São Paulo, Brazil. I current work as Tech Leader in (Codus Tecnologia)[http://www.codus.com.br/].
+I'm Celso Crivelaro, Software Engineering Manager / Professor based on São Paulo, Brazil. 
 
-Areas of Interest:
-- Ruby
-- Python
-- Architecture
-- Testing
-- Distributed Systems
-- Compilers
+I current work as Software Engineering Manager in (Revelo)[http://www.revelo.com.br/].
 
+Development - Areas of Interest:
+- Ruby, Python
+- Architecture and Testing
+- Compilers and Languages
+- IA and Big Data
+
+Management:
+- People and their motivation
+- Complexity of problems
+- Agile
