@@ -18,7 +18,7 @@ github_username:  celsocrivelaro
 # Build settings
 markdown: kramdown
 
-gems: [jekyll-sitemap]
+plugins: [jekyll-sitemap]
 
 exclude: ['s3_website.yml', 'Gemfile', 'Gemfile.lock', 'deploy.sh', '.gitignore', 'deploy.sh']
 timezone: America/Sao_Paulo
