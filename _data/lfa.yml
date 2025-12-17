@@ -1,0 +1,11 @@
+discipina: Linguagens Formais e Autômatos
+diretorio: lfa
+aulas:
+  - numero: '01'
+    aula: Introdução à Disciplina
+    notas:
+      - nome: Introdução à Linguagens 
+        url: 01-linguagens.md
+      - nome: Tópicos à Matemática Discreta
+        url: 01-matematica-discreta.md
+    exercicio: 01-matematica-discreta.md

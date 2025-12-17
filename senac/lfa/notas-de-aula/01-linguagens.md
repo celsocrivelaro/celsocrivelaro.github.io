@@ -1,7 +1,3 @@
-Claro! Abaixo estão **notas de aula introdutórias** para a disciplina **Linguagens Formais e Autômatos**, com linguagem acessível e organização didática, ideais para uso em sala ou como material de estudo.
-
----
-
 # Introdução às Linguagens Formais e Autômatos
 
 ## 1. O que é uma Linguagem — Definição Geral
@@ -196,6 +192,8 @@ As linguagens formais e os autômatos são fundamentais em diversas áreas da co
 * Classificação de problemas por complexidade
 
 ---
+
+Atenção: O conteúdo destas nota de aula foram feitas pelo professor da disciplina com ajuda da IA generativa.
 
 ## Conclusão
 

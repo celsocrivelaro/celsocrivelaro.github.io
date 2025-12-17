@@ -4,11 +4,11 @@
     <title>Celso Crivelaro</title>
     <description>Sharing a little bit of my experience and ideas.
 </description>
-    <link>https://crivelaro.me/</link>
-    <atom:link href="https://crivelaro.me/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 27 Jan 2020 17:06:08 -0300</pubDate>
-    <lastBuildDate>Mon, 27 Jan 2020 17:06:08 -0300</lastBuildDate>
-    <generator>Jekyll v3.8.5</generator>
+    <link>http://localhost:4000/</link>
+    <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Wed, 17 Dec 2025 16:37:15 -0300</pubDate>
+    <lastBuildDate>Wed, 17 Dec 2025 16:37:15 -0300</lastBuildDate>
+    <generator>Jekyll v3.10.0</generator>
     
       <item>
         <title>Sistemas de Recomendação</title>
@@ -18,8 +18,8 @@
 
 </description>
         <pubDate>Mon, 27 Jan 2020 17:00:36 -0300</pubDate>
-        <link>https://crivelaro.me/recommendation/2020/01/27/sistemas-recomendacao.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/recommendation/2020/01/27/sistemas-recomendacao.html</guid>
+        <link>http://localhost:4000/recommendation/2020/01/27/sistemas-recomendacao.html</link>
+        <guid isPermaLink="true">http://localhost:4000/recommendation/2020/01/27/sistemas-recomendacao.html</guid>
         
         <category>recommendation</category>
         
@@ -149,8 +149,8 @@ OK
 &lt;/ul&gt;
 </description>
         <pubDate>Sat, 21 Jul 2018 08:00:36 -0300</pubDate>
-        <link>https://crivelaro.me/redis/2018/07/21/cache-com-redis.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/redis/2018/07/21/cache-com-redis.html</guid>
+        <link>http://localhost:4000/redis/2018/07/21/cache-com-redis.html</link>
+        <guid isPermaLink="true">http://localhost:4000/redis/2018/07/21/cache-com-redis.html</guid>
         
         <category>redis</category>
         
@@ -169,8 +169,8 @@ OK
 
 </description>
         <pubDate>Fri, 30 Mar 2018 08:00:36 -0300</pubDate>
-        <link>https://crivelaro.me/programming/2018/03/30/padroes-testes-tela.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/programming/2018/03/30/padroes-testes-tela.html</guid>
+        <link>http://localhost:4000/programming/2018/03/30/padroes-testes-tela.html</link>
+        <guid isPermaLink="true">http://localhost:4000/programming/2018/03/30/padroes-testes-tela.html</guid>
         
         <category>talks</category>
         
@@ -260,8 +260,8 @@ OK
 &lt;p&gt;In next article, I show what to take account when testing an external resource and when I should automate those tests.&lt;/p&gt;
 </description>
         <pubDate>Sat, 16 Dec 2017 09:00:36 -0200</pubDate>
-        <link>https://crivelaro.me/testing/2017/12/16/when-and-how-to-automate-external-resources-testing.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/testing/2017/12/16/when-and-how-to-automate-external-resources-testing.html</guid>
+        <link>http://localhost:4000/testing/2017/12/16/when-and-how-to-automate-external-resources-testing.html</link>
+        <guid isPermaLink="true">http://localhost:4000/testing/2017/12/16/when-and-how-to-automate-external-resources-testing.html</guid>
         
         <category>testing</category>
         
@@ -378,8 +378,8 @@ OK
 &lt;/ul&gt;
 </description>
         <pubDate>Tue, 28 Nov 2017 09:00:36 -0200</pubDate>
-        <link>https://crivelaro.me/testing/2017/11/28/se-e-possivel-fazer-e-possivel-testar.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/testing/2017/11/28/se-e-possivel-fazer-e-possivel-testar.html</guid>
+        <link>http://localhost:4000/testing/2017/11/28/se-e-possivel-fazer-e-possivel-testar.html</link>
+        <guid isPermaLink="true">http://localhost:4000/testing/2017/11/28/se-e-possivel-fazer-e-possivel-testar.html</guid>
         
         <category>testing</category>
         
@@ -401,8 +401,8 @@ OK
 &lt;div style=&quot;font-family: Sans-Serif;font-size: 12px;color: #999;opacity: 0.5; padding-top: 5px;&quot;&gt; powered by &lt;a href=&quot;https://www.typeform.com//?utm_campaign=UzR1tb&amp;amp;utm_source=typeform.com-11315361-Basic&amp;amp;utm_medium=typeform&amp;amp;utm_content=typeform-embedded-poweredbytypeform&amp;amp;utm_term=PT&quot; style=&quot;color: #999&quot; target=&quot;_blank&quot;&gt;Typeform&lt;/a&gt; &lt;/div&gt;
 </description>
         <pubDate>Sat, 18 Nov 2017 09:00:36 -0200</pubDate>
-        <link>https://crivelaro.me/testing/2017/11/18/pesquisa-teste.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/testing/2017/11/18/pesquisa-teste.html</guid>
+        <link>http://localhost:4000/testing/2017/11/18/pesquisa-teste.html</link>
+        <guid isPermaLink="true">http://localhost:4000/testing/2017/11/18/pesquisa-teste.html</guid>
         
         <category>testing</category>
         
@@ -419,8 +419,8 @@ OK
 
 </description>
         <pubDate>Sun, 08 Oct 2017 08:00:36 -0300</pubDate>
-        <link>https://crivelaro.me/programming/2017/10/08/projeto-de-apis.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/programming/2017/10/08/projeto-de-apis.html</guid>
+        <link>http://localhost:4000/programming/2017/10/08/projeto-de-apis.html</link>
+        <guid isPermaLink="true">http://localhost:4000/programming/2017/10/08/projeto-de-apis.html</guid>
         
         <category>talks</category>
         
@@ -528,8 +528,8 @@ OK
 
 </description>
         <pubDate>Sun, 09 Apr 2017 10:11:36 -0300</pubDate>
-        <link>https://crivelaro.me/programming/2017/04/09/application-server-x-web-server.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/programming/2017/04/09/application-server-x-web-server.html</guid>
+        <link>http://localhost:4000/programming/2017/04/09/application-server-x-web-server.html</link>
+        <guid isPermaLink="true">http://localhost:4000/programming/2017/04/09/application-server-x-web-server.html</guid>
         
         <category>server</category>
         
@@ -546,8 +546,8 @@ OK
 
 </description>
         <pubDate>Sat, 18 Mar 2017 10:11:36 -0300</pubDate>
-        <link>https://crivelaro.me/programming/2017/03/18/testing-network-conditions-talk.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/programming/2017/03/18/testing-network-conditions-talk.html</guid>
+        <link>http://localhost:4000/programming/2017/03/18/testing-network-conditions-talk.html</link>
+        <guid isPermaLink="true">http://localhost:4000/programming/2017/03/18/testing-network-conditions-talk.html</guid>
         
         <category>talks</category>
         
@@ -683,8 +683,8 @@ OK
 
 </description>
         <pubDate>Tue, 27 Dec 2016 18:11:36 -0200</pubDate>
-        <link>https://crivelaro.me/team/2016/12/27/onboarding-de-novos-devs.html</link>
-        <guid isPermaLink="true">https://crivelaro.me/team/2016/12/27/onboarding-de-novos-devs.html</guid>
+        <link>http://localhost:4000/team/2016/12/27/onboarding-de-novos-devs.html</link>
+        <guid isPermaLink="true">http://localhost:4000/team/2016/12/27/onboarding-de-novos-devs.html</guid>
         
         <category>docker</category>
         
