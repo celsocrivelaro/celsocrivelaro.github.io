@@ -20,6 +20,8 @@ markdown: kramdown
 
 plugins: [jekyll-sitemap]
 
+remote_theme: "jekyll/minima"
+
 exclude: ['s3_website.yml', 'Gemfile', 'Gemfile.lock', 'deploy.sh', '.gitignore', 'deploy.sh']
 timezone: America/Sao_Paulo
 
