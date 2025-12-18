@@ -18,11 +18,13 @@ github_username:  celsocrivelaro
 # Build settings
 markdown: kramdown
 
-plugins: [jekyll-sitemap]
+plugins: 
+  - jekyll-sitemap
+  - jekyll-include-cache
 
-remote_theme: "jekyll/minima"
+theme: minimal-mistakes-jekyll
 
-exclude: ['s3_website.yml', 'Gemfile', 'Gemfile.lock', 'deploy.sh', '.gitignore', 'deploy.sh']
+exclude: ['Gemfile', 'Gemfile.lock', '.gitignore']
 timezone: America/Sao_Paulo
 
 authors:
