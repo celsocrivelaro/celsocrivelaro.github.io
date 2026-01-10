@@ -6,6 +6,6 @@ aulas:
     notas:
       - nome: Introdução à Linguagens 
         url: 01-linguagens.md
-      - nome: Tópicos à Matemática Discreta
-        url: 01-matematica-discreta.md
+      - nome: Tópicos à Matemática
+        url: 02-numeros.md
     exercicio: 01-matematica-discreta.md
