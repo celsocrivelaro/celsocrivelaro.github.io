@@ -2,6 +2,6 @@ source 'https://rubygems.org'
 
 ruby '3.3.4'
 
-gem 'jekyll', '~> 4.4.1'
+gem 'jekyll'
 gem 'jekyll-sitemap'
-gem "minima"
+gem "github-pages", group: :jekyll_plugins
